@@ -1,6 +1,7 @@
 #include <SPI.h>
 
 #define LCD Serial2
+#define MAXPACKETLEN 6
 
 //Program Description
 //Full of Swag - Mebin
@@ -72,6 +73,35 @@ void loop()
       charsInBuffer = 0; 
     } 
   } 
+}
+
+/// Start of packet character: .
+/// End of packet character: *
+String Read_Serial_Stream(void)
+{
+  String inputString; 
+  
+  while (Serial.available())
+  {
+    char c = (char)Serial.read(); // Incoming byte
+    
+    if (c == '*') // If the char is the end of the packet, stop here and process it
+    { 
+      return inputString; // leave so main loop can process it
+    }
+    
+    if (c == '.')  // beginning of packet
+    {
+      inputString = ""; //clear the current buffer; we're starting a new packet
+    }
+    else
+      inputString += c; // if it's not a start or finish character, then add it to the buffer
+      
+    if (inputString.length() > MAXPACKETLEN) // The packet is longer than any packet we'd expect, throw it out
+    {
+      inputString = ""; // clear the input string, because obviously this is invalid
+    }
+  }
 }
 
 int GetValFromString(char *p, int length)

@@ -7,8 +7,6 @@
 
 char msgBuffer[255];
 int charsInBuffer=0;
-char ethernetMsgBuffer[15];
-int iE=0;
 
 // Pins
 int motorPin[] = {
@@ -23,15 +21,6 @@ int motorValue[6] = {
   0, 0, 0, 0, 0, 0};
 boolean directionState[8] = {
   false, false, false, false, false, false};
-
-byte mac[] = { 
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-byte ip[] = { 
-  192, 168, 1, 178 };
-byte server[] = { 
-  192, 168, 1, 177 };
-
-boolean serverConnected;
 
 void setup()
 {

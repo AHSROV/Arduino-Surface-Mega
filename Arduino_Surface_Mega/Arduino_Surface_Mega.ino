@@ -7,9 +7,11 @@
 char msgBuffer[255];
 int charsInBuffer=0;
 
+bool MotorsKill;
+
 // Pins
 int motorPin[] = {
-  2, 3, 4, 5, 6, 7};
+  2, 3, 5, 6, 7, 8};
 int forwardPin[] = {
   22, 24, 26, 28, 30, 32};
 int reversePin[] = {
@@ -25,13 +27,20 @@ String serialString;
 
 void setup()
 {
-
+  pinMode(53, INPUT_PULLUP);  
   LCD.begin(9600);
   Serial.begin(9600);
   
   delay(500);
   LCD_Clear_Screen();
   SetPinModes();
+    
+  KillMotors(); 
+  
+ // TCCR3B = TCCR3B & 0b11111000 | 0x04;
+ // TCCR4B = TCCR4B & 0b11111000 | 0x04;
+  
+  delay(20);
 }
 
 unsigned long LCDtimer; 
@@ -42,7 +51,12 @@ void loop()
     LCDtimer = millis();
     update_LCD();
   }
-
+  
+  if(digitalRead(53))
+    KillMotors();
+  else
+    MotorsKill = false;
+  
   if (Serial.available() > 0)
   {  
     ReadSerialStream();
@@ -143,6 +157,7 @@ void SetPinModes()
   {
     pinMode(motorPin[i], OUTPUT);
     pinMode(forwardPin[i], OUTPUT);
+    pinMode(reversePin[i], OUTPUT);
   }
 }
 
@@ -156,7 +171,20 @@ void UpdateMotorSpeeds()
 
 void UpdateMotorSpeed(int i) 
 {
-  analogWrite(motorPin[i], motorValue[i]);
+  if(MotorsKill)
+  {
+    if(i > 3)
+      analogWrite(motorPin[i], 0);
+    else
+      analogWrite(motorPin[i], 255);
+  }
+  else
+  {
+    if(i > 3)
+      analogWrite(motorPin[i], motorValue[i]);
+    else
+      analogWrite(motorPin[i], 255-motorValue[i]);
+  }
 /*  Serial.print("Pin ");
   Serial.print(motorPin[i]);
   Serial.print(" set to ");  
@@ -175,6 +203,12 @@ void UpdateMotorDirection(int i)
 {
   digitalWrite(forwardPin[i], directionState[i]);
   digitalWrite(reversePin[i], !directionState[i]);
+}
+
+void KillMotors()
+{
+    MotorsKill = true;
+    UpdateMotorSpeeds();
 }
 
 
@@ -209,7 +243,10 @@ void LCD_goto(uint8_t lineNum, uint8_t cPos)
 
 void update_LCD() {
   LCD_goto(1, 0);
-  LCD.print("AHS ROV Confidential");
+  if(MotorsKill)
+    LCD.print("Motors Killedo!        ");
+  else
+    LCD.print("AHS ROV Confidential");
   
   LCD_goto(2, 0);
   LCD.print("M1: ");

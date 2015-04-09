@@ -1,5 +1,3 @@
-#include <SPI.h>
-
 #define LCD Serial2
 #define MAXPACKETLEN 6
 
@@ -22,6 +20,8 @@ int motorValue[6] = {
   0, 0, 0, 0, 0, 0};
 boolean directionState[8] = {
   false, false, false, false, false, false};
+  
+String serialString;
 
 void setup()
 {
@@ -45,49 +45,25 @@ void loop()
 
   if (Serial.available() > 0)
   {  
-    //these Major Leters will be used for controlling the motor.
-    //Read the Data Taken and then converts it into Byte from ASCII Code
-    if (charsInBuffer >= sizeof(msgBuffer))
-    {
-      Serial.println("e: overflow");
-      charsInBuffer = 0; 
-    } 
-    msgBuffer[charsInBuffer] = (byte)Serial.read();
-    charsInBuffer++;  
-
-    // Wait for end of line
-    if (msgBuffer[charsInBuffer-1] == 10 || msgBuffer[charsInBuffer-1] == 13)
-    {
-      if(msgBuffer[0] == 'm' && msgBuffer[1] <= '7')
-      {
-        ProcessMotorCommand(msgBuffer, charsInBuffer);
-      }
-      else if(msgBuffer[0] == 'p' && msgBuffer[1] == 'u')
-      {
-        Serial.println("pu");
-      }
-      else
-      {
-        msgBuffer[charsInBuffer - 1] = 0;
-      }
-      charsInBuffer = 0; 
-    } 
+    ReadSerialStream();
+    ProcessMotorCommand(serialString);
   } 
 }
 
 /// Start of packet character: .
 /// End of packet character: *
-String Read_Serial_Stream(void)
-{
-  String inputString; 
-  
-  while (Serial.available())
+void ReadSerialStream(void)
+{ 
+  String inputString;
+  while (Serial.available() > 0)
   {
+    
     char c = (char)Serial.read(); // Incoming byte
     
     if (c == '*') // If the char is the end of the packet, stop here and process it
     { 
-      return inputString; // leave so main loop can process it
+      serialString = inputString;
+      return; // leave so main loop can process it
     }
     
     if (c == '.')  // beginning of packet
@@ -97,7 +73,7 @@ String Read_Serial_Stream(void)
     else
       inputString += c; // if it's not a start or finish character, then add it to the buffer
       
-    if (inputString.length() > MAXPACKETLEN) // The packet is longer than any packet we'd expect, throw it out
+    if (inputString.length() > MAXPACKETLEN) // the packet is longer than any packet we'd expect, throw it out
     {
       inputString = ""; // clear the input string, because obviously this is invalid
     }
@@ -121,50 +97,49 @@ int GetValFromString(char *p, int length)
   return v;
 }
 
-void ProcessMotorCommand(char msgBuffer[], int msgLen)
+void ProcessMotorCommand(String command)
 { 
-  if (msgLen < 4)
-  {
-    Serial.println("e: cmd too short.");
-    return;
-  }
-  int motor = GetValFromString(&msgBuffer[1], 1);
+  int motor;
+  boolean forward;
+  int speed; 
+  
+  // Find the motor number
+  motor = command.substring(1, 1).toInt();
+  
+  // Validate the motor number
   if ((motor < 0) || (motor > 5))
   {
     Serial.println("e: invalid motor.");
     return;
   }
-
-  //if it starts with M and ends with a % and a LF or CR ... DO what it says below
-  //Motor Direction Decleration
-  if(msgBuffer[2]=='f')
-  {
-    // We assume everything but the first letter and the line ending are part of a number.
-    int speed = GetValFromString(&msgBuffer[3], charsInBuffer-3);
-    if (speed < 0)
-    {
-      Serial.println("e: error, not an integer.");
-      return;
-    }
-    SendMessage(speed,motor,true);  
-  }   
-  else if(msgBuffer[2]=='r')
-  {
-    int speed = GetValFromString(&msgBuffer[3], charsInBuffer-3);
-    SendMessage(speed,motor,false);  
-  }
+  Serial.print("Direction: ");
+  Serial.println(command.charAt(2));
+  // Find & validate the direction
+  if(command[2] == 'f')
+    forward = true;
+  else if(command[2] == 'r')
+    forward = false;
   else
   {
-    Serial.print("e: Unrecognized cmd: ");
-    msgBuffer[charsInBuffer-1] = 0;
-    Serial.println(msgBuffer);
+    Serial.println("e: invalid direction");
+    return;
   }
-
-  Serial.println();
+  
+  // Find the speed
+  speed = command.substring(3,5).toInt();
+  
+  // Validate the speed
+  if((speed < 0) || (speed > 100))
+  {
+    Serial.println("e: invalid speed");
+    return;
+  }
+  
+  SetMotorSpeed(speed, motor, forward);
 }
 
 
-int SendMessage(int speed, int motor, boolean forward)
+int SetMotorSpeed(int speed, int motor, boolean forward)
 {
   if(speed>=0 || speed<=100)
   {

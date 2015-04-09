@@ -87,7 +87,7 @@ void ProcessMotorCommand(String command)
   int speed; 
   
   // Find the motor number
-  motor = command.substring(1, 1).toInt();
+  motor = command.substring(1, 2).toInt();
   
   // Validate the motor number
   if ((motor < 0) || (motor > 5))
@@ -95,8 +95,7 @@ void ProcessMotorCommand(String command)
     Serial.println("e: invalid motor.");
     return;
   }
-  Serial.print("Direction: ");
-  Serial.println(command.charAt(2));
+  
   // Find & validate the direction
   if(command[2] == 'f')
     forward = true;
@@ -124,8 +123,6 @@ void ProcessMotorCommand(String command)
 
 int SetMotor(int speed, int motor, boolean forward)
 {
-  Serial.print("speed: ");
-  Serial.println(speed);
   if(speed>=0 || speed<=100)
   {
     motorValue[motor] = (int)(speed*2.55);
@@ -160,10 +157,10 @@ void UpdateMotorSpeeds()
 void UpdateMotorSpeed(int i) 
 {
   analogWrite(motorPin[i], motorValue[i]);
-  Serial.print("Pin ");
+/*  Serial.print("Pin ");
   Serial.print(motorPin[i]);
   Serial.print(" set to ");  
-  Serial.println(motorValue[i]);
+  Serial.println(motorValue[i]);*/
 }
 
 void UpdateMotorDirections()

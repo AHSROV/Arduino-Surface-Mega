@@ -64,32 +64,36 @@ void loop()
   } 
 }
 
+String inputString;
 /// Start of packet character: .
 /// End of packet character: *
-void ReadSerialStream(void)
+boolean ReadSerialStream(void)
 { 
-  String inputString;
+
   while (Serial.available() > 0)
   {
-    
     char c = (char)Serial.read(); // Incoming byte
     
     if (c == '*') // If the char is the end of the packet, stop here and process it
     { 
       serialString = inputString;
-      return; // leave so main loop can process it
+      return true; // leave so main loop can process it
     }
     
     if (c == '.')  // beginning of packet
     {
       inputString = ""; //clear the current buffer; we're starting a new packet
+      return false;
     }
     else
+    {
       inputString += c; // if it's not a start or finish character, then add it to the buffer
-      
+      return false;
+    } 
     if (inputString.length() > MAXPACKETLEN) // the packet is longer than any packet we'd expect, throw it out
     {
       inputString = ""; // clear the input string, because obviously this is invalid
+      return false;
     }
   }
 }

@@ -80,23 +80,6 @@ void ReadSerialStream(void)
   }
 }
 
-int GetValFromString(char *p, int length)
-{
-  if (!isDigit(*p) || length < 1)
-  {
-    return -1;
-  }
-
-  int v=0;
-  while(isDigit(*p) && length > 0)
-  {
-    v = v*10 + *p - '0';
-    p++; 
-    length--;
-  }
-  return v;
-}
-
 void ProcessMotorCommand(String command)
 { 
   int motor;
@@ -126,7 +109,7 @@ void ProcessMotorCommand(String command)
   }
   
   // Find the speed
-  speed = command.substring(3,5).toInt();
+  speed = command.substring(3,6).toInt();
   
   // Validate the speed
   if((speed < 0) || (speed > 100))
@@ -135,22 +118,20 @@ void ProcessMotorCommand(String command)
     return;
   }
   
-  SetMotorSpeed(speed, motor, forward);
+  SetMotor(speed, motor, forward);
 }
 
 
-int SetMotorSpeed(int speed, int motor, boolean forward)
+int SetMotor(int speed, int motor, boolean forward)
 {
+  Serial.print("speed: ");
+  Serial.println(speed);
   if(speed>=0 || speed<=100)
   {
     motorValue[motor] = (int)(speed*2.55);
-    //Serial.print("Speed: ");
-    //Serial.println(motorValue[motor]);
   }
 
   directionState[motor] = forward;
-  //Serial.print("Direction: ");
-  //Serial.println(directionState[motor]);
 
   UpdateMotorSpeed(motor);
   UpdateMotorDirection(motor);

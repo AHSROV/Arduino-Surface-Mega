@@ -23,7 +23,7 @@ int motorValue[6] = {
 boolean directionState[8] = {
   false, false, false, false, false, false};
   
-String serialString;
+String inputString;
 
 void setup()
 {
@@ -37,18 +37,18 @@ void setup()
     
   KillMotors(); 
   
- // TCCR3B = TCCR3B & 0b11111000 | 0x04;
- // TCCR4B = TCCR4B & 0b11111000 | 0x04;
+  TCCR3B = TCCR3B & 0b11111000 | 0x04;
+  TCCR4B = TCCR4B & 0b11111000 | 0x04;
   
-  delay(20);
+  delay(200);
 }
 
 unsigned long LCDtimer; 
 
 void loop()
 {
-  if(millis() > 200) {
-    LCDtimer = millis();
+  if(millis() > LCDtimer) {
+    LCDtimer = millis() + 200;
     update_LCD();
   }
   
@@ -60,11 +60,10 @@ void loop()
   if (Serial.available() > 0)
   {  
     ReadSerialStream();
-    ProcessMotorCommand(serialString);
+    ProcessMotorCommand(inputString);
   } 
 }
 
-String inputString;
 /// Start of packet character: .
 /// End of packet character: *
 boolean ReadSerialStream(void)
@@ -76,7 +75,6 @@ boolean ReadSerialStream(void)
     
     if (c == '*') // If the char is the end of the packet, stop here and process it
     { 
-      serialString = inputString;
       return true; // leave so main loop can process it
     }
     

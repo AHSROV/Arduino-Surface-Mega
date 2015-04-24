@@ -21,11 +21,11 @@ bool MotorsKill;
 
 // Pins
 int motorPin[] = {
-  2, 3, 5, 6, 7, 8};
-int forwardPin[] = {
-  22, 24, 26, 28, 30, 32};
+  7, 6, 5, 2, 8, 3};
 int reversePin[] = {
-  23, 25, 27, 29, 31, 33};
+  29, 27, 31, 25, 33, 23};
+int forwardPin[] = {
+  26, 30, 28, 22, 24, 32};
 
 // Motor Information
 int motorValue[6] = {

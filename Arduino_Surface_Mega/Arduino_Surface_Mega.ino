@@ -68,22 +68,22 @@ void loop()
     update_LCD();
   }
   
-  /*if(Serial)
+  if(Serial)
   {
     if(digitalRead(53))
       KillMotors();
     else
       MotorsKill = false;
     
-    if (Serial.available() > 0)
-    {  
-      ReadSerialStream();
-      ProcessMotorCommand(inputString);
-    } 
-  }
-  else*/
-  {
-    ProcessController();
+    if(Serial)
+    {
+      if(ReadSerialStream())
+        ProcessMotorCommand(inputString);
+    }
+    else
+    {
+      ProcessController();
+    }
   }
 }
 
@@ -104,19 +104,17 @@ boolean ReadSerialStream(void)
     if (c == '.')  // beginning of packet
     {
       inputString = ""; //clear the current buffer; we're starting a new packet
-      return false;
     }
     else
     {
       inputString += c; // if it's not a start or finish character, then add it to the buffer
-      return false;
     } 
     if (inputString.length() > MAXPACKETLEN) // the packet is longer than any packet we'd expect, throw it out
     {
       inputString = ""; // clear the input string, because obviously this is invalid
-      return false;
     }
   }
+  return false;
 }
 
 void ProcessMotorCommand(String command)

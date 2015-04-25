@@ -33,6 +33,9 @@ int motorValue[6] = {
 boolean directionState[8] = {
   false, false, false, false, false, false};
   
+float motorPercentage = 1;
+int controlSet = 0;
+  
 String inputString;
 
 void setup()
@@ -155,21 +158,6 @@ void ProcessMotorCommand(String command)
   SetMotor(speed, motor, forward);
 }  
 
-float NormalLongToFloat(long input) 
-{
-  float temp; 
-  temp = (float) input / 32700.0;
-  if(temp > 1.0)
-    temp = 1.0;
-  if(temp < -1.0)
-    temp = -1.0;
-    
-  if(temp < .05 && temp > -.05)
-    temp = 0;
-    
-  return temp;
-}
-
 int SetMotor(int speed, int motor, boolean forward)
 {
   if(speed>=0 || speed<=100)
@@ -180,13 +168,13 @@ int SetMotor(int speed, int motor, boolean forward)
   directionState[motor] = forward;
 
   UpdateMotorSpeed(motor);
-  UpdateMotorDirection(motor);
+  UpdatedirectionState(motor);
 }
 
 void SetPinModes()
 {
   UpdateMotorSpeeds();
-  UpdateMotorDirections();
+  UpdatedirectionStates();
 
   for(int i = 0; i < 6; i++)
   {
@@ -216,15 +204,15 @@ void UpdateMotorSpeed(int i)
   Serial.println(motorValue[i]);*/
 }
 
-void UpdateMotorDirections()
+void UpdatedirectionStates()
 {
   for(int i = 0; i < 6; i++)
   {
-    UpdateMotorDirection(i);
+    UpdatedirectionState(i);
   }
 }
 
-void UpdateMotorDirection(int i)
+void UpdatedirectionState(int i)
 {
   digitalWrite(forwardPin[i], directionState[i]);
   digitalWrite(reversePin[i], !directionState[i]);
@@ -267,40 +255,61 @@ void LCD_goto(uint8_t lineNum, uint8_t cPos)
 // End Pete's Code
 
 void update_LCD() {
-  LCD_goto(1, 0);
+  LCD_goto(1,0);
+    LCD.print(motorPercentage);
+  LCD_goto(1, 19);
   if(MotorsKill)
-    LCD.print("Motors Killedo!        ");
+    LCD.print("X");
   else
-    LCD.print("AHS ROV Confidential");
+    LCD.print(" ");
+    
+  LCD_goto(1, 5);
+  if(controlSet == 0)
+    LCD.print("F");
+  if(controlSet == 1)
+    LCD.print("B");
   
   LCD_goto(2, 0);
-  LCD.print("M1: ");
+  LCD.print("M1:");
+  LCD.print(GetSign(directionState[0]));
   LCD.print(motorValue[0]);
   LCD.print("  ");
   
   LCD_goto(2, 10);
-  LCD.print("M2: ");
+  LCD.print("M2:");
+  LCD.print(GetSign(directionState[1]));
   LCD.print(motorValue[1]);
   LCD.print("  ");
   
   LCD_goto(3, 0);
-  LCD.print("M3: ");
+  LCD.print("M3:");
+  LCD.print(GetSign(directionState[2]));
   LCD.print(motorValue[2]);
   LCD.print("  ");
   
   LCD_goto(3, 10);
-  LCD.print("M4: ");
+  LCD.print("M4:");
+  LCD.print(GetSign(directionState[3]));
   LCD.print(motorValue[3]);
   LCD.print("  ");
   
   LCD_goto(4, 0);
-  LCD.print("M5: ");
+  LCD.print("M5:");
+  LCD.print(GetSign(directionState[4]));
   LCD.print(motorValue[4]);
   LCD.print("  ");
   
   LCD_goto(4, 10);
-  LCD.print("M6: ");
+  LCD.print("M6:");
+  LCD.print(GetSign(directionState[5]));
   LCD.print(motorValue[5]);
   LCD.print("  ");
 }
 
+String GetSign(bool direction)
+{
+  if(direction)
+    return " ";
+  else
+    return "-";
+}
